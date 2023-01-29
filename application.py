@@ -90,8 +90,8 @@ df_coor = pd.read_csv('Dataset/hotel_coordinate.csv')
 df_user['features'] = df_user.apply(lambda x: np.array(x[1:]), axis=1)
 df_user = df_user[['userId', 'features']]
 
-df_hotel['features'] = df_hotel.apply(lambda x: np.array(x[1:]), axis=1)
-df_hotel = df_hotel[['locationId', 'features']]
+# df_hotel['features'] = df_hotel.apply(lambda x: np.array(x[1:]), axis=1)
+# df_hotel = df_hotel[['locationId', 'features']]
 
 st.set_page_config(page_title='🏨 Hotel Recommend System', page_icon='🏨', layout='wide', initial_sidebar_state='auto')
 
@@ -117,12 +117,13 @@ if button:
     df_result = searchHotel(df_coor, address, 5)
     df_result = df_result.reset_index(drop=True)
     df_result = df_result.merge(df_hotel, on='locationId', how='left')
-    df_result['features'].fillna(user_pref, inplace=True)
-    st.write(df_result)
+    df_result.fillna(0, inplace=True)
+    df_result['features'] = df_result.apply(lambda x: np.array(x[-5:]), axis=1)
     df_result['score'] = df_result['features'].apply(lambda x: np.dot(user_pref, x))
-    df_result = df_result.sort_values(by='score', ascending=False)
+    df_result = df_result.sort_values(by=['score', 'distance'], ascending=[False, True])
+    # st.write(df_result)
     for i in range(len(df_result)):
       st.write(f'<hr>', unsafe_allow_html=True)    
       st.write(i+1)
-      st.write(f'<p style="font-size:20px"><a href="https://www.tripadvisor.com.vn/g{df_result.iloc[i]["parentGeoId"]}-d{df_result.iloc[i]["locationId"]}">{df_result.iloc[i]["name"]}</a> - {df_result.iloc[i]["distance"]}km</p>', unsafe_allow_html=True)   
+      st.write(f'<p style="font-size:20px"><a href="https://www.tripadvisor.com.vn/g{df_result.iloc[i]["parentGeoId"]}-d{df_result.iloc[i]["locationId"]}">{df_result.iloc[i]["name"]}</a> - {df_result.iloc[i]["distance"]}km</p>', unsafe_allow_html=True)
     # st.write(get_top_10(user_id))
